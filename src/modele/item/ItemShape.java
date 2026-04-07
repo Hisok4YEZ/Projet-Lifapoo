@@ -74,14 +74,46 @@ public class ItemShape
         this.tabColors = bufferColors;
     }
 
-    public void stack(ItemShape ShapeSup) {
+    public void stack(ItemShape ShapeSup) { // ShapeSup est empilé sur this
+        for (int i=0; i<4; i++){
+            if(tabSubShapes[i]==SubShape.None && ShapeSup.tabSubShapes[i]!=SubShape.None){
+                tabSubShapes[i]=ShapeSup.tabSubShapes[i];
+                tabColors[i]=ShapeSup.tabColors[i];
+            }
+        }
+
     }
 
-    public ItemShape Cut() {
-        return null;
+    public ItemShape Cut() { // this et l'objet retourné correpondent au deux sorties
+        SubShape[] SubShapeDroite = new SubShape[4];
+        SubShape[] SubShapeGauche = new SubShape[4];
+        Color[] ColorDroite = new Color[4];
+        Color[] ColorGauche = new Color [4];
+        for (int i=0; i<=3; i++){
+            if(i>1){
+                SubShapeDroite[i]=SubShape.None;
+                SubShapeGauche[i]=tabSubShapes[i];
+                ColorDroite[i]=null;
+                ColorGauche[i]=tabColors[i];
+            }
+            else{
+                SubShapeDroite[i]=tabSubShapes[i];
+                SubShapeGauche[i]=SubShape.None;
+                ColorDroite[i]=tabColors[i];
+                ColorGauche[i]=null;
+            }
+        }
+        tabSubShapes=SubShapeGauche;
+        tabColors=ColorGauche;
+        return new ItemShape(SubShapeDroite,ColorDroite);
     }
 
     public void Color(Color c) {
+        for (int i=0; i<4; i++){
+            if(tabSubShapes[i]!=SubShape.None) {
+                tabColors[i] = c;
+            }
+        }
     }
 
     public boolean equals(Object obj) {
