@@ -11,10 +11,8 @@ public class Main {
         Runnable r = new Runnable() {
             @Override
             public void run() {
-                Jeu jeu = new Jeu();
-                VueControleur vc = new VueControleur(jeu);
-                jeu.getPlateau().addObserver(vc);
-                vc.setVisible(true);
+                vuecontroleur.MainMenu menu = new vuecontroleur.MainMenu();
+                menu.setVisible(true);
             }
         };
 

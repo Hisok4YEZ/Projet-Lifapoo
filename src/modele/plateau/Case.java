@@ -25,6 +25,10 @@ public class Case {
         return this.gisement;
     }
 
+    public void setGisement(Item g) {
+        this.gisement = g;
+    }
+
     public Case(Plateau _plateau) {
         this.plateau = _plateau;
     }

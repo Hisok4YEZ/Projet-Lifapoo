@@ -40,13 +40,6 @@ public class Plateau
                 this.map.put(this.grilleCases[x][y], new Point(x, y));
             }
         }
-        Random rand1 = new Random();
-        int x = rand1.nextInt(13) + 2;
-        Random rand2 = new Random();
-        int y = rand2.nextInt(13) + 2;
-        this.grilleCases[x][y].gisement = new ItemShape("CrCrCrCr");
-        this.grilleCases[x + 1][y + 1].gisement = new ItemShape("CrCrCrCrCr");
-        System.out.println(x + " " + y + " a un gisement");
     }
 
     public void setMachine(int x, int y, Machine m) {
@@ -67,8 +60,11 @@ public class Plateau
         return retour;
     }
 
+    public long tickCount = 0;
+
     @Override
     public void run() {
+        this.tickCount++;
         for (int x = 0; x < 16; ++x) {
             for (int y = 0; y < 16; ++y) {
                 Case c = this.grilleCases[x][y];

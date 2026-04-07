@@ -28,9 +28,44 @@ public class ZoneLivraison
             System.out.println("Forme accept\u00e9e ! compteur=" + this.compteur);
         }
         if (this.compteur == tmp.getNb_formeAttendue()) {
-            this.j.objectif_suivant();
             this.compteur = 0;
             System.out.println("Objectif suivant !");
+            
+            javax.swing.SwingUtilities.invokeLater(() -> {
+                String[] options;
+                if (this.j.currentLevel < 3) {
+                    options = new String[]{"Niveau Suivant", "Menu Principal"};
+                } else {
+                    options = new String[]{"Menu Principal"};
+                }
+                
+                int result = javax.swing.JOptionPane.showOptionDialog(
+                    null,
+                    "Félicitations ! Vous avez réussi l'objectif du Niveau " + this.j.currentLevel + ".",
+                    "Niveau Terminé",
+                    javax.swing.JOptionPane.DEFAULT_OPTION,
+                    javax.swing.JOptionPane.INFORMATION_MESSAGE,
+                    null,
+                    options,
+                    options[0]
+                );
+                
+                // Fermer les fenêtres du jeu
+                for (java.awt.Window window : java.awt.Window.getWindows()) {
+                    if (window instanceof vuecontroleur.VueControleur) {
+                        window.dispose();
+                    }
+                }
+                
+                if (result == 0 && this.j.currentLevel < 3) {
+                    // Niveau suivant
+                    vuecontroleur.VueControleur vc = new vuecontroleur.VueControleur(new Jeu(this.j.currentLevel + 1));
+                    vc.setVisible(true);
+                } else {
+                    // Menu Principal
+                    new vuecontroleur.MainMenu().setVisible(true);
+                }
+            });
         }
     }
 

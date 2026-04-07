@@ -42,6 +42,10 @@ public class VueControleur
     private Image icoPoubelle;
     private Image icoMine;
     private Image icoZoneLivraison;
+    private Image icoEmpileur;
+    private Image icoAtelierPeinture;
+    private Image icoRotateur;
+    private Image icoDecoupeur;
     private JComponent grilleIP;
     private boolean mousePressed = false;
     private ImagePanel[][] tabIP;
@@ -55,7 +59,20 @@ public class VueControleur
         this.placerLesComposantsGraphiques();
         this.plateau.addObserver(this);
         this.mettreAJourAffichage();
+        
+        SwingUtilities.invokeLater(() -> {
+            modele.jeu.Objectif obj = this.jeu.get_Quel_objectif();
+            String msg = "Niveau " + this.jeu.currentLevel + " - Objectif : Produire et livrer " + 
+                         obj.getNb_formeAttendue() + " fois la forme requise.\n" +
+                         "Bonne chance !";
+            javax.swing.JOptionPane.showMessageDialog(this, msg, "Objectif du niveau", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+        });
     }
+
+    private Image[] animForward = new Image[14];
+    private Image[] animLeft = new Image[14];
+    private Image[] animRight = new Image[14];
+    public static int animationFrame = 0;
 
     private void chargerLesIcones() {
         this.icoRouge = new ImageIcon("./data/sprites/colors/blue.png").getImage();
@@ -63,6 +80,23 @@ public class VueControleur
         this.icoPoubelle = new ImageIcon("./data/sprites/buildings/trash.png").getImage();
         this.icoMine = new ImageIcon("./data/sprites/buildings/miner.png").getImage();
         this.icoZoneLivraison = new ImageIcon("./data/sprites/buildings/goal_acceptor.png").getImage();
+        this.icoEmpileur = new ImageIcon("./data/sprites/buildings/stacker.png").getImage();
+        this.icoAtelierPeinture = new ImageIcon("./data/sprites/buildings/painter.png").getImage();
+        this.icoRotateur = new ImageIcon("./data/sprites/buildings/rotater.png").getImage();
+        this.icoDecoupeur = new ImageIcon("./data/sprites/buildings/cutter.png").getImage();
+        
+        for (int i = 0; i < 14; i++) {
+            this.animForward[i] = new ImageIcon("./data/sprites/belt/built/forward_" + i + ".png").getImage();
+            this.animLeft[i] = new ImageIcon("./data/sprites/belt/built/left_" + i + ".png").getImage();
+            this.animRight[i] = new ImageIcon("./data/sprites/belt/built/right_" + i + ".png").getImage();
+        }
+        
+        new javax.swing.Timer(70, e -> {
+            animationFrame = (animationFrame + 1) % 14;
+            if (grilleIP != null) {
+                grilleIP.repaint();
+            }
+        }).start();
     }
 
     private void placerLesComposantsGraphiques() {
@@ -78,9 +112,21 @@ public class VueControleur
         boutonTapis.addActionListener(e -> this.jeu.setMachineActuelle(new Tapis()));
         JButton boutonPoubelle = new JButton("Poubelle");
         boutonPoubelle.addActionListener(e -> this.jeu.setMachineActuelle(new Poubelle()));
+        JButton boutonEmpileur = new JButton("Empileur");
+        boutonEmpileur.addActionListener(e -> this.jeu.setMachineActuelle(new modele.plateau.Empileur()));
+        JButton boutonPeinture = new JButton("Peinture");
+        boutonPeinture.addActionListener(e -> this.jeu.setMachineActuelle(new modele.plateau.AtelierPeinture()));
+        JButton boutonRotateur = new JButton("Rotateur");
+        boutonRotateur.addActionListener(e -> this.jeu.setMachineActuelle(new modele.plateau.Rotateur()));
+        JButton boutonDecoupeur = new JButton("Découpeur");
+        boutonDecoupeur.addActionListener(e -> this.jeu.setMachineActuelle(new modele.plateau.Decoupeur()));
         panneauOutils.add(boutonMine);
         panneauOutils.add(boutonTapis);
         panneauOutils.add(boutonPoubelle);
+        panneauOutils.add(boutonEmpileur);
+        panneauOutils.add(boutonPeinture);
+        panneauOutils.add(boutonRotateur);
+        panneauOutils.add(boutonDecoupeur);
         this.add((Component)panneauOutils, "South");
         this.tabIP = new ImagePanel[this.sizeX][this.sizeY];
         for (int y = 0; y < this.sizeY; ++y) {
@@ -128,29 +174,62 @@ public class VueControleur
             for (int y = 0; y < this.sizeY; ++y) {
                 this.tabIP[x][y].setBackground((Image)null);
                 this.tabIP[x][y].setFront(null);
+                this.tabIP[x][y].setShape(null);
+                this.tabIP[x][y].setItemColor(null);
+                this.tabIP[x][y].setDirection(null);
+                
                 Case c = this.plateau.getCases()[x][y];
                 Machine m = c.getMachine();
                 Item g = c.getGisement();
                 if (m != null) {
+                    this.tabIP[x][y].setDirection(m.getDirection());
                     if (m instanceof Tapis) {
-                        this.tabIP[x][y].setBackground(this.icoTapisDroite);
+                        modele.plateau.Direction inputDir = m.getInputDirection();
+                        modele.plateau.Direction baseOrientation = modele.plateau.Direction.North;
+                        if (inputDir == modele.plateau.Direction.South) baseOrientation = modele.plateau.Direction.North;
+                        else if (inputDir == modele.plateau.Direction.North) baseOrientation = modele.plateau.Direction.South;
+                        else if (inputDir == modele.plateau.Direction.East) baseOrientation = modele.plateau.Direction.West;
+                        else if (inputDir == modele.plateau.Direction.West) baseOrientation = modele.plateau.Direction.East;
+                        
+                        this.tabIP[x][y].setDirection(baseOrientation);
+                        
+                        String shapeClass = ((Tapis)m).getShapeType();
+                        if ("RIGHT".equals(shapeClass)) {
+                            this.tabIP[x][y].setAnimBackground(animRight);
+                        } else if ("LEFT".equals(shapeClass)) {
+                            this.tabIP[x][y].setAnimBackground(animLeft);
+                        } else {
+                            this.tabIP[x][y].setAnimBackground(animForward);
+                        }
                     } else if (m instanceof Poubelle) {
                         this.tabIP[x][y].setBackground(this.icoPoubelle);
                     } else if (m instanceof Mine) {
                         this.tabIP[x][y].setBackground(this.icoMine);
                     } else if (m instanceof ZoneLivraison) {
                         this.tabIP[x][y].setBackground(this.icoZoneLivraison);
+                    } else if (m instanceof modele.plateau.Empileur) {
+                        this.tabIP[x][y].setBackground(this.icoEmpileur);
+                    } else if (m instanceof modele.plateau.AtelierPeinture) {
+                        this.tabIP[x][y].setBackground(this.icoAtelierPeinture);
+                    } else if (m instanceof modele.plateau.Rotateur) {
+                        this.tabIP[x][y].setBackground(this.icoRotateur);
+                    } else if (m instanceof modele.plateau.Decoupeur) {
+                        this.tabIP[x][y].setBackground(this.icoDecoupeur);
                     }
                     Item current = m.getCurrent();
                     if (current instanceof ItemShape) {
                         this.tabIP[x][y].setShape((ItemShape)current);
-                    }
-                    if (current instanceof ItemColor) {
-                        // empty if block
+                    } else if (current instanceof modele.item.ItemColor) {
+                        this.tabIP[x][y].setItemColor((modele.item.ItemColor)current);
                     }
                 }
-                if (g == null) continue;
-                this.tabIP[x][y].setShape((ItemShape)g);
+                if (g != null) {
+                    if (g instanceof ItemShape) {
+                        this.tabIP[x][y].setShape((ItemShape)g);
+                    } else if (g instanceof modele.item.ItemColor) {
+                        this.tabIP[x][y].setItemColor((modele.item.ItemColor)g);
+                    }
+                }
             }
         }
         this.grilleIP.repaint();

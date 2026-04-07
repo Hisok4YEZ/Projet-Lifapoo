@@ -39,12 +39,20 @@ public class ItemShape
                     this.tabSubShapes[i] = SubShape.Carre;
                     break;
                 }
+                case 'R': {
+                    this.tabSubShapes[i] = SubShape.Circle;
+                    break;
+                }
+                case 'S': {
+                    this.tabSubShapes[i] = SubShape.Star;
+                    break;
+                }
                 case '-': {
                     this.tabSubShapes[i] = SubShape.None;
                     break;
                 }
                 default: {
-                    throw new IllegalStateException("Unexpected value: " + str.charAt(i));
+                    throw new IllegalStateException("Unexpected value: " + str.charAt(i * 2));
                 }
             }
             switch (str.charAt(i * 2 + 1)) {
@@ -71,6 +79,16 @@ public class ItemShape
         this.tabColors = _colors;
     }
 
+    public ItemShape copy() {
+        SubShape[] copySubShapes = new SubShape[4];
+        Color[] copyColors = new Color[4];
+        for (int i=0; i<4; i++) {
+            copySubShapes[i] = this.tabSubShapes[i];
+            copyColors[i] = this.tabColors[i];
+        }
+        return new ItemShape(copySubShapes, copyColors);
+    }
+
     public void rotate() {
         SubShape[] bufferSubShapes = new SubShape[]{this.tabSubShapes[3], this.tabSubShapes[0], this.tabSubShapes[1], this.tabSubShapes[2]};
         Color[] bufferColors = new Color[]{this.tabColors[3], this.tabColors[0], this.tabColors[1], this.tabColors[2]};
@@ -79,13 +97,19 @@ public class ItemShape
     }
 
     public void stack(ItemShape ShapeSup) { // ShapeSup est empilé sur this
+        SubShape[] newSubShapes = new SubShape[4];
+        Color[] newColors = new Color[4];
         for (int i=0; i<4; i++){
-            if(tabSubShapes[i]==SubShape.None && ShapeSup.tabSubShapes[i]!=SubShape.None){
-                tabSubShapes[i]=ShapeSup.tabSubShapes[i];
-                tabColors[i]=ShapeSup.tabColors[i];
+            if(ShapeSup.tabSubShapes[i]!=SubShape.None){
+                newSubShapes[i] = ShapeSup.tabSubShapes[i];
+                newColors[i] = ShapeSup.tabColors[i];
+            } else {
+                newSubShapes[i] = tabSubShapes[i];
+                newColors[i] = tabColors[i];
             }
         }
-
+        tabSubShapes = newSubShapes;
+        tabColors = newColors;
     }
 
     public ItemShape Cut() { // this et l'objet retourné correpondent au deux sorties
@@ -113,11 +137,18 @@ public class ItemShape
     }
 
     public void Color(Color c) {
+        SubShape[] newSubShapes = new SubShape[4];
+        Color[] newColors = new Color[4];
         for (int i=0; i<4; i++){
+            newSubShapes[i] = tabSubShapes[i];
             if(tabSubShapes[i]!=SubShape.None) {
-                tabColors[i] = c;
+                newColors[i] = c;
+            } else {
+                newColors[i] = tabColors[i];
             }
         }
+        tabSubShapes = newSubShapes;
+        tabColors = newColors;
     }
 
     public boolean equals(Object obj) {

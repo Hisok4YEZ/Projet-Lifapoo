@@ -12,7 +12,11 @@ public class Mine
     @Override
     public void work() {
         if (this.c.gisement != null && new Random().nextInt(4) == 0 && this.current.isEmpty()) {
-            this.current.add((ItemShape)this.c.gisement);
+            if (this.c.gisement instanceof ItemShape) {
+                this.current.add(((ItemShape)this.c.gisement).copy()); 
+            } else if (this.c.gisement instanceof modele.item.ItemColor) {
+                this.current.add(((modele.item.ItemColor)this.c.gisement).copy());
+            }
         }
     }
 
