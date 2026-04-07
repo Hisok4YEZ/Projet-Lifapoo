@@ -66,6 +66,10 @@ public class ItemShape
             }
         }
     }
+        private ItemShape(SubShape[] _subShapes, Color[] _colors) {
+        this.tabSubShapes = _subShapes;
+        this.tabColors = _colors;
+    }
 
     public void rotate() {
         SubShape[] bufferSubShapes = new SubShape[]{this.tabSubShapes[3], this.tabSubShapes[0], this.tabSubShapes[1], this.tabSubShapes[2]};
