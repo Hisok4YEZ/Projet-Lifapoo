@@ -3,7 +3,12 @@
  */
 package vuecontroleur;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.event.MouseAdapter;
@@ -14,12 +19,15 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 import javax.swing.SwingUtilities;
+import javax.swing.border.EmptyBorder;
 import modele.item.Item;
 import modele.item.ItemColor;
 import modele.item.ItemShape;
+import modele.jeu.Objectif;
 import modele.jeu.Jeu;
 import modele.plateau.Case;
 import modele.plateau.Machine;
@@ -51,6 +59,9 @@ public class VueControleur
     private boolean mousePressed = false;
     private ImagePanel[][] tabIP;
     private Timer animationTimer;
+    private ImagePanel objectifPreview;
+    private JLabel objectifTexte;
+    private JLabel objectifProgression;
 
     public VueControleur(Jeu _jeu) {
         this.jeu = _jeu;
@@ -107,6 +118,8 @@ public class VueControleur
         this.setResizable(true);
         this.setSize(this.sizeX * 82, this.sizeX * 82);
         this.setDefaultCloseOperation(3);
+        this.setLayout(new BorderLayout());
+        this.add(this.creerPanneauObjectif(), "North");
         this.grilleIP = new JPanel(new GridLayout(this.sizeY, this.sizeX));
         JPanel panneauOutils = new JPanel();
         JButton boutonMine = new JButton("Mine");
@@ -172,6 +185,38 @@ public class VueControleur
         this.add(this.grilleIP);
     }
 
+    private JPanel creerPanneauObjectif() {
+        JPanel panneauObjectif = new JPanel(new BorderLayout(12, 0));
+        panneauObjectif.setBackground(new Color(28, 32, 38));
+        panneauObjectif.setBorder(new EmptyBorder(10, 12, 10, 12));
+
+        this.objectifPreview = new ImagePanel();
+        this.objectifPreview.setPreferredSize(new Dimension(56, 56));
+        this.objectifPreview.setBackground((Image)null);
+
+        JPanel texteObjectif = new JPanel(new GridLayout(2, 1));
+        texteObjectif.setOpaque(false);
+
+        this.objectifTexte = new JLabel();
+        this.objectifTexte.setForeground(new Color(245, 245, 245));
+        this.objectifTexte.setFont(new Font("Arial", Font.BOLD, 16));
+
+        this.objectifProgression = new JLabel();
+        this.objectifProgression.setForeground(new Color(140, 210, 255));
+        this.objectifProgression.setFont(new Font("Arial", Font.PLAIN, 14));
+
+        texteObjectif.add(this.objectifTexte);
+        texteObjectif.add(this.objectifProgression);
+
+        JPanel conteneurPreview = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        conteneurPreview.setOpaque(false);
+        conteneurPreview.add(this.objectifPreview);
+
+        panneauObjectif.add(conteneurPreview, "West");
+        panneauObjectif.add(texteObjectif, "Center");
+        return panneauObjectif;
+    }
+
     private void mettreAJourAffichage() {
         for (int x = 0; x < this.sizeX; ++x) {
             for (int y = 0; y < this.sizeY; ++y) {
@@ -235,7 +280,30 @@ public class VueControleur
                 }
             }
         }
+        this.mettreAJourObjectif();
         this.grilleIP.repaint();
+    }
+
+    private void mettreAJourObjectif() {
+        Objectif objectif = this.jeu.get_Quel_objectif();
+        this.objectifPreview.setShape(objectif.getItemShape());
+        this.objectifPreview.setItemColor(null);
+        this.objectifPreview.setFront(null);
+        this.objectifPreview.setDirection(null);
+
+        int progression = 0;
+        for (int x = 0; x < this.sizeX; ++x) {
+            for (int y = 0; y < this.sizeY; ++y) {
+                Machine machine = this.plateau.getCases()[x][y].getMachine();
+                if (machine instanceof ZoneLivraison) {
+                    progression = ((ZoneLivraison)machine).getCompteur();
+                }
+            }
+        }
+
+        this.objectifTexte.setText("Objectif du niveau " + this.jeu.currentLevel);
+        this.objectifProgression.setText("Livrer " + progression + " / " + objectif.getNb_formeAttendue());
+        this.objectifPreview.repaint();
     }
 
     @Override
