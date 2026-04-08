@@ -11,6 +11,9 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.Image;
+import java.awt.KeyEventDispatcher;
+import java.awt.KeyboardFocusManager;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Observable;
@@ -57,6 +60,8 @@ public class VueControleur
     private Image icoDecoupeur;
     private JComponent grilleIP;
     private boolean mousePressed = false;
+    private int lastHoveredX = -1;
+    private int lastHoveredY = -1;
     private ImagePanel[][] tabIP;
     private Timer animationTimer;
     private ImagePanel objectifPreview;
@@ -156,13 +161,20 @@ public class VueControleur
 
                     @Override
                     public void mouseClicked(MouseEvent e) {
-                        VueControleur.this.mousePressed = false;
-                        VueControleur.this.jeu.press(xx, yy);
-                        System.out.println(xx + "-" + yy);
+                        VueControleur.this.lastHoveredX = xx;
+                        VueControleur.this.lastHoveredY = yy;
+                        if (SwingUtilities.isRightMouseButton(e)) {
+                            VueControleur.this.jeu.removeMachine(xx, yy);
+                        } else {
+                            VueControleur.this.mousePressed = false;
+                            VueControleur.this.jeu.press(xx, yy);
+                        }
                     }
 
                     @Override
                     public void mouseEntered(MouseEvent e) {
+                        VueControleur.this.lastHoveredX = xx;
+                        VueControleur.this.lastHoveredY = yy;
                         if (VueControleur.this.mousePressed) {
                             VueControleur.this.jeu.slide(xx, yy);
                         }
@@ -170,8 +182,12 @@ public class VueControleur
 
                     @Override
                     public void mousePressed(MouseEvent e) {
-                        VueControleur.this.mousePressed = true;
-                        VueControleur.this.jeu.press(xx, yy);
+                        VueControleur.this.lastHoveredX = xx;
+                        VueControleur.this.lastHoveredY = yy;
+                        if (!SwingUtilities.isRightMouseButton(e)) {
+                            VueControleur.this.mousePressed = true;
+                            VueControleur.this.jeu.press(xx, yy);
+                        }
                     }
 
                     @Override
@@ -183,6 +199,21 @@ public class VueControleur
             }
         }
         this.add(this.grilleIP);
+
+        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher() {
+            @Override
+            public boolean dispatchKeyEvent(KeyEvent e) {
+                if (e.getID() == KeyEvent.KEY_PRESSED && e.getKeyCode() == KeyEvent.VK_R) {
+                    int x = VueControleur.this.lastHoveredX;
+                    int y = VueControleur.this.lastHoveredY;
+                    if (x >= 0 && y >= 0) {
+                        VueControleur.this.jeu.rotateMachine(x, y);
+                    }
+                    return true;
+                }
+                return false;
+            }
+        });
     }
 
     private JPanel creerPanneauObjectif() {
@@ -212,8 +243,14 @@ public class VueControleur
         conteneurPreview.setOpaque(false);
         conteneurPreview.add(this.objectifPreview);
 
+        JLabel labelControls = new JLabel("Clic droit : supprimer   |   R : tourner");
+        labelControls.setForeground(new Color(160, 160, 160));
+        labelControls.setFont(new Font("Arial", Font.PLAIN, 12));
+        labelControls.setHorizontalAlignment(JLabel.RIGHT);
+
         panneauObjectif.add(conteneurPreview, "West");
         panneauObjectif.add(texteObjectif, "Center");
+        panneauObjectif.add(labelControls, "East");
         return panneauObjectif;
     }
 

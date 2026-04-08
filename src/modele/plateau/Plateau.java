@@ -48,6 +48,17 @@ public class Plateau
         this.notifyObservers();
     }
 
+    public void removeMachine(int x, int y) {
+        this.grilleCases[x][y].setMachine(null);
+        this.setChanged();
+        this.notifyObservers();
+    }
+
+    public void notifyChange() {
+        this.setChanged();
+        this.notifyObservers();
+    }
+
     private boolean contenuDansGrille(Point p) {
         return p.x >= 0 && p.x < 16 && p.y >= 0 && p.y < 16;
     }

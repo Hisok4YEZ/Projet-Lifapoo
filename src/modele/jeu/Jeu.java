@@ -5,6 +5,8 @@ package modele.jeu;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import modele.item.ItemColor;
 import modele.item.ItemShape;
 import modele.jeu.Objectif;
 import modele.plateau.Machine;
@@ -60,7 +62,41 @@ public class Jeu
         }
 
         this.plateau.setMachine(7, 7, new ZoneLivraison(this));
+        this.placerGisementsCouleur(4);
         this.start();
+    }
+
+    private void placerGisementsCouleur(int nbPaires) {
+        modele.item.Color[] couleurs = modele.item.Color.values();
+        Random rng = new Random();
+        int placees = 0;
+        int tentatives = 0;
+
+        while (placees < nbPaires && tentatives < 500) {
+            tentatives++;
+            // Centre du groupe : position aléatoire, en évitant les bords
+            int cx = 1 + rng.nextInt(14);
+            int cy = 1 + rng.nextInt(14);
+
+            // Décalage du second gisement : 1 case dans une direction aléatoire
+            int[][] offsets = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+            int[] off = offsets[rng.nextInt(4)];
+            int x2 = cx + off[0];
+            int y2 = cy + off[1];
+
+            if (x2 < 0 || x2 >= 16 || y2 < 0 || y2 >= 16) continue;
+            if (this.plateau.getCases()[cx][cy].getMachine() != null) continue;
+            if (this.plateau.getCases()[x2][y2].getMachine() != null) continue;
+            if (this.plateau.getCases()[cx][cy].getGisement() != null) continue;
+            if (this.plateau.getCases()[x2][y2].getGisement() != null) continue;
+
+            modele.item.Color couleur = couleurs[rng.nextInt(couleurs.length)];
+            this.plateau.getCases()[cx][cy].setGisement(new ItemColor(couleur));
+            this.plateau.setMachine(cx, cy, new Mine());
+            this.plateau.getCases()[x2][y2].setGisement(new ItemColor(couleur));
+            this.plateau.setMachine(x2, y2, new Mine());
+            placees++;
+        }
     }
 
     public Objectif get_Quel_objectif() {
@@ -92,6 +128,29 @@ public class Jeu
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void removeMachine(int x, int y) {
+        this.plateau.removeMachine(x, y);
+    }
+
+    public void rotateMachine(int x, int y) {
+        Machine m = this.plateau.getCases()[x][y].getMachine();
+        if (m == null) return;
+        modele.plateau.Direction[] order = {
+            modele.plateau.Direction.North,
+            modele.plateau.Direction.East,
+            modele.plateau.Direction.South,
+            modele.plateau.Direction.West
+        };
+        modele.plateau.Direction cur = m.getDirection();
+        for (int i = 0; i < order.length; i++) {
+            if (order[i] == cur) {
+                m.setDirection(order[(i + 1) % order.length]);
+                break;
+            }
+        }
+        this.plateau.notifyChange();
     }
 
     public void slide(int x, int y) {
