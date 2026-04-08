@@ -15,6 +15,7 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.Timer;
 import javax.swing.SwingUtilities;
 import modele.item.Item;
 import modele.item.ItemColor;
@@ -49,6 +50,7 @@ public class VueControleur
     private JComponent grilleIP;
     private boolean mousePressed = false;
     private ImagePanel[][] tabIP;
+    private Timer animationTimer;
 
     public VueControleur(Jeu _jeu) {
         this.jeu = _jeu;
@@ -91,12 +93,13 @@ public class VueControleur
             this.animRight[i] = new ImageIcon("./data/sprites/belt/built/right_" + i + ".png").getImage();
         }
         
-        new javax.swing.Timer(70, e -> {
+        this.animationTimer = new Timer(70, e -> {
             animationFrame = (animationFrame + 1) % 14;
             if (grilleIP != null) {
                 grilleIP.repaint();
             }
-        }).start();
+        });
+        this.animationTimer.start();
     }
 
     private void placerLesComposantsGraphiques() {
@@ -233,6 +236,17 @@ public class VueControleur
             }
         }
         this.grilleIP.repaint();
+    }
+
+    @Override
+    public void dispose() {
+        if (this.animationTimer != null) {
+            this.animationTimer.stop();
+        }
+        if (this.jeu != null) {
+            this.jeu.stopGame();
+        }
+        super.dispose();
     }
 
     @Override

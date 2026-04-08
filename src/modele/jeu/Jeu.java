@@ -20,6 +20,7 @@ public class Jeu
     private List<Objectif> objectifList;
     private int Quel_objectif = 0;
     private Machine machineActuelle = new Tapis();
+    private volatile boolean running = true;
 
     public final int currentLevel;
 
@@ -148,13 +149,20 @@ public class Jeu
 
     public void jouerPartie() {
         try {
-            while (true) {
+            while (this.running) {
                 this.plateau.run();
                 Thread.sleep(1000L);
             }
         }
         catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            if (this.running) {
+                throw new RuntimeException(e);
+            }
         }
+    }
+
+    public void stopGame() {
+        this.running = false;
+        this.interrupt();
     }
 }

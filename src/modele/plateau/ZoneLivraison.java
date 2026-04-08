@@ -29,6 +29,7 @@ public class ZoneLivraison
         }
         if (this.compteur == tmp.getNb_formeAttendue()) {
             this.compteur = 0;
+            this.j.stopGame();
             System.out.println("Objectif suivant !");
             
             javax.swing.SwingUtilities.invokeLater(() -> {
